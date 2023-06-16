@@ -1,0 +1,6 @@
+CREATE TABLE IF NOT EXISTS bots (
+    id VARCHAR(255) PRIMARY KEY,
+    name VARCHAR(255) NOT NULL,
+    token VARCHAR(255) UNIQUE NOT NULL,
+    is_available BOOLEAN DEFAULT false
+) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
