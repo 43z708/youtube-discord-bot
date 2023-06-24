@@ -7,7 +7,7 @@ type GuildRepository interface {
 	FetchPublicAllByBotID(string) (domain.PublicGuilds, error)
 	FetchOneById(string) (domain.Guild, error)
 	FetchAll() (domain.Guilds, error)
-	Create(domain.Guild) (string, error)
-	Update(domain.Guild) (domain.Guilds, error)
-	Delete(string) (domain.Guilds, error)
+	Create(domain.Guild) error
+	Update(*domain.Guild) error
+	Delete(string) error
 }

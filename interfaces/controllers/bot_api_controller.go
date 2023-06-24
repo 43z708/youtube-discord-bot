@@ -10,12 +10,12 @@ import (
 )
 
 type BotApiController struct {
-	Interactor usecase.BotInteractor
+	BotInteractor usecase.BotInteractor
 }
 
 func NewBotApiController(sqlHandler *gorm.DB) *BotApiController {
 	return &BotApiController{
-		Interactor: usecase.BotInteractor{
+		BotInteractor: usecase.BotInteractor{
 			BotRepository: &database.BotRepository{
 				SqlHandler: sqlHandler,
 			},
@@ -25,7 +25,7 @@ func NewBotApiController(sqlHandler *gorm.DB) *BotApiController {
 
 func (controller *BotApiController) FetchPublicOneById(c Context) {
 	id := c.Param("id")
-	bot, err := controller.Interactor.FetchPublicOneById(id)
+	bot, err := controller.BotInteractor.FetchPublicOneById(id)
 	if err != nil {
 		c.JSON(500, err.Error())
 	}
@@ -33,7 +33,7 @@ func (controller *BotApiController) FetchPublicOneById(c Context) {
 }
 
 func (controller *BotApiController) FetchAllPublic(c Context) {
-	bots, err := controller.Interactor.FetchAllPublic()
+	bots, err := controller.BotInteractor.FetchAllPublic()
 	if err != nil {
 		c.JSON(500, gin.H{"message": err.Error()})
 		return
@@ -44,7 +44,7 @@ func (controller *BotApiController) FetchAllPublic(c Context) {
 func (controller *BotApiController) Create(c Context) {
 	b := domain.Bot{}
 	c.Bind(&b)
-	err := controller.Interactor.Create(b)
+	err := controller.BotInteractor.Create(b)
 	if err != nil {
 		c.JSON(500, err.Error())
 		return

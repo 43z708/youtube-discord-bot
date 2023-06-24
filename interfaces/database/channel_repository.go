@@ -100,7 +100,7 @@ func (repo *ChannelRepository) Update(channel *domain.Channel) error {
 }
 
 func (repo *ChannelRepository) Delete(i string) error {
-	channel := make([]domain.Channel, 0)
+	var channel domain.Channel
 	id, _ := strconv.Atoi(i)
 	result := repo.SqlHandler.First(&channel, id)
 	result = repo.SqlHandler.Delete(&channel)

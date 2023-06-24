@@ -8,20 +8,19 @@ import (
 	"errors"
 	"fmt"
 	"log"
-	"os"
 
 	"github.com/bwmarrin/discordgo"
-	"github.com/joho/godotenv"
 	"gorm.io/gorm"
 )
 
 type ChannelController struct {
-	Interactor usecase.ChannelInteractor
+	ChannelInteractor usecase.ChannelInteractor
+	GuildInteractor   usecase.GuildInteractor
 }
 
 func NewChannelController(sqlHandler *gorm.DB) *ChannelController {
 	return &ChannelController{
-		Interactor: usecase.ChannelInteractor{
+		ChannelInteractor: usecase.ChannelInteractor{
 			ChannelRepository: &database.ChannelRepository{
 				SqlHandler: sqlHandler,
 			},
@@ -30,7 +29,7 @@ func NewChannelController(sqlHandler *gorm.DB) *ChannelController {
 }
 
 func (controller *ChannelController) FetchOneById(id string) domain.Channel {
-	channel, err := controller.Interactor.FetchOneById(id)
+	channel, err := controller.ChannelInteractor.FetchOneById(id)
 
 	if err != nil {
 		log.Fatalf("Error getting channels data: %s", err.Error())
@@ -39,7 +38,7 @@ func (controller *ChannelController) FetchOneById(id string) domain.Channel {
 }
 
 func (controller *ChannelController) FetchAllByBotID(id string) domain.Channels {
-	channels, err := controller.Interactor.FetchAllByBotID(id)
+	channels, err := controller.ChannelInteractor.FetchAllByBotID(id)
 	if err != nil {
 		log.Fatalf("Error getting channels data: %s", err.Error())
 	}
@@ -48,7 +47,7 @@ func (controller *ChannelController) FetchAllByBotID(id string) domain.Channels 
 }
 
 func (controller *ChannelController) FetchAllByGuildID(id string) domain.Channels {
-	channels, err := controller.Interactor.FetchAllByGuildID(id)
+	channels, err := controller.ChannelInteractor.FetchAllByGuildID(id)
 	if err != nil {
 		log.Fatalf("Error getting channels data: %s", err.Error())
 	}
@@ -56,12 +55,7 @@ func (controller *ChannelController) FetchAllByGuildID(id string) domain.Channel
 	return channels
 }
 
-func (controller *ChannelController) Create(s *discordgo.Session, i *discordgo.InteractionCreate) {
-	err := godotenv.Load()
-	if err != nil {
-		log.Fatalf("Error loading dotenv: %s", err.Error())
-	}
-
+func (controller *ChannelController) Create(s *discordgo.Session, i *discordgo.InteractionCreate, t string) {
 	// スラッシュコマンドのデータを取得する
 	command := i.ApplicationCommandData()
 
@@ -87,17 +81,18 @@ func (controller *ChannelController) Create(s *discordgo.Session, i *discordgo.I
 	channels, _ := s.GuildChannels(i.GuildID)
 
 	// youtubeリンク投稿カテゴリの存在チェック
-	CATEGORY_NAME := os.Getenv("CATEGORY_NAME")
+	guild, err := controller.GuildInteractor.FetchOneById(i.GuildID)
+	CategoryName := guild.CategoryName
 	var youtubeCategoryID string
 	for _, channel := range channels {
-		if channel.Type == discordgo.ChannelTypeGuildCategory && channel.Name == CATEGORY_NAME {
+		if channel.Type == discordgo.ChannelTypeGuildCategory && channel.Name == CategoryName {
 			youtubeCategoryID = channel.ID
 		}
 	}
 	// 存在しない場合カテゴリを作成
 	if youtubeCategoryID == "" {
 		newCategory, err := s.GuildChannelCreateComplex(i.GuildID, discordgo.GuildChannelCreateData{
-			Name:     CATEGORY_NAME,
+			Name:     CategoryName,
 			Type:     discordgo.ChannelTypeGuildCategory,
 			Position: 100,
 		})
@@ -145,7 +140,7 @@ func (controller *ChannelController) Create(s *discordgo.Session, i *discordgo.I
 		Searchword: tag,
 	}
 
-	err = controller.Interactor.Create(c)
+	err = controller.ChannelInteractor.Create(c)
 	if err != nil {
 		utilities.InteractionReply(s, i, "データの保存に失敗しました。:"+err.Error())
 		return
@@ -158,7 +153,7 @@ func (controller *ChannelController) Create(s *discordgo.Session, i *discordgo.I
 func (controller *ChannelController) Update(s *discordgo.Session, c *discordgo.ChannelUpdate) {
 	// 変更されたチャンネルのIDを取得する
 	updatedChannelID := c.Channel.ID
-	channel, err := controller.Interactor.FetchOneById(updatedChannelID)
+	channel, err := controller.ChannelInteractor.FetchOneById(updatedChannelID)
 
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
@@ -177,7 +172,7 @@ func (controller *ChannelController) Update(s *discordgo.Session, c *discordgo.C
 	channel.Name = c.Channel.Name
 	channel.Searchword = c.Channel.Topic
 
-	err = controller.Interactor.Update(channel)
+	err = controller.ChannelInteractor.Update(channel)
 
 	if err != nil {
 		s.ChannelMessageSend(channel.ID, "データの更新に失敗しました。:"+err.Error())
@@ -192,7 +187,7 @@ func (controller *ChannelController) Delete(s *discordgo.Session, c *discordgo.C
 	// 削除されたチャンネルのIDを取得する
 	deletedChannelID := c.Channel.ID
 
-	err := controller.Interactor.Delete(deletedChannelID)
+	err := controller.ChannelInteractor.Delete(deletedChannelID)
 
 	if err != nil {
 		fmt.Println("Error has occured:", err)

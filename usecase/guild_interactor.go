@@ -26,15 +26,15 @@ func (interactor *GuildInteractor) FetchPublicOneById(identifier string) (guild 
 }
 
 func (interactor *GuildInteractor) Create(b domain.Guild) (err error) {
-	_, err = interactor.GuildRepository.Create(b)
+	err = interactor.GuildRepository.Create(b)
 	return err
 }
 
-func (interactor *GuildInteractor) Update(b domain.Guild) (err error) {
-	_, err = interactor.GuildRepository.Update(b)
+func (interactor *GuildInteractor) Update(b *domain.Guild) (err error) {
+	err = interactor.GuildRepository.Update(b)
 	return err
 }
 func (interactor *GuildInteractor) Delete(identifier string) (err error) {
-	_, err = interactor.GuildRepository.Delete(identifier)
+	err = interactor.GuildRepository.Delete(identifier)
 	return err
 }

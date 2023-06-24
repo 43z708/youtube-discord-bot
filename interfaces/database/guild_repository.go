@@ -66,30 +66,30 @@ func (repo *GuildRepository) FetchAll() (domain.Guilds, error) {
 	return guilds, result.Error
 }
 
-func (repo *GuildRepository) Create(g domain.Guild) (string, error) {
+func (repo *GuildRepository) Create(g domain.Guild) error {
 
 	result := repo.SqlHandler.Create(&g)
 	if result.Error != nil {
-		return "", result.Error
+		return result.Error
 	}
-	return g.ID, result.Error
+	return nil
 }
 
-func (repo *GuildRepository) Update(guild *domain.Guild) (string, error) {
+func (repo *GuildRepository) Update(guild *domain.Guild) error {
 	result := repo.SqlHandler.Save(&guild)
 	if result.Error != nil {
-		return "", result.Error
+		return result.Error
 	}
-	return guild.ID, result.Error
+	return nil
 }
 
-func (repo *GuildRepository) Delete(i string) (string, error) {
-	guild := make([]domain.Guild, 0)
+func (repo *GuildRepository) Delete(i string) error {
+	var guild domain.Guild
 	id, _ := strconv.Atoi(i)
 	result := repo.SqlHandler.First(&guild, id)
-	if result.Error != nil {
-		return "", result.Error
-	}
 	result = repo.SqlHandler.Delete(&guild)
-	return i, result.Error
+	if result.Error != nil {
+		return result.Error
+	}
+	return nil
 }
