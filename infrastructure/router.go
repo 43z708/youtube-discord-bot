@@ -5,12 +5,13 @@ import (
 	"log"
 
 	"github.com/gin-gonic/gin"
+	"gorm.io/gorm"
 )
 
-func Router() {
+func Router(Init *gorm.DB) {
 	r := gin.Default()
 
-	BotApiController := controllers.NewBotApiController(Init())
+	BotApiController := controllers.NewBotApiController(Init)
 
 	// ヘルスチェック用エンドポイント
 	r.GET("/health", func(c *gin.Context) {
@@ -18,8 +19,8 @@ func Router() {
 	})
 
 	r.POST("/bots", func(c *gin.Context) { BotApiController.Create(c) })
-	r.GET("/bots", func(c *gin.Context) { BotApiController.Index(c) })
-	r.GET("/bot/:id", func(c *gin.Context) { BotApiController.Show(c) })
+	r.GET("/bots", func(c *gin.Context) { BotApiController.FetchAllPublic(c) })
+	r.GET("/bot/:id", func(c *gin.Context) { BotApiController.FetchPublicOneById(c) })
 
 	// HTTPサーバーを非同期で起動
 	go func() {

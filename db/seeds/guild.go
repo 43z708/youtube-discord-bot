@@ -17,11 +17,13 @@ func GuildSeeds(db *gorm.DB) error {
 
 	guildId01 := os.Getenv("GUILD_ID01")
 	botId01 := os.Getenv("BOT_ID01")
+	YoutubeApiKey := os.Getenv("YOUTUBE_API_KEY")
 
 	guild := domain.Guild{
-		ID:    guildId01,
-		Name:  "test-guild01",
-		BotID: botId01,
+		ID:            guildId01,
+		Name:          "test-guild01",
+		YoutubeApiKey: YoutubeApiKey,
+		BotID:         botId01,
 	}
 	err = db.Create(&guild).Error
 	if err != nil {

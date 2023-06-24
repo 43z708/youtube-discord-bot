@@ -14,8 +14,9 @@ var (
 
 func main() {
 
-	infrastructure.Router()
-	infrastructure.Discord()
+	Init := infrastructure.Init()
+	infrastructure.Router(Init)
+	infrastructure.Discord(Init)
 
 	infrastructure.Youtube()
 

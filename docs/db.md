@@ -30,7 +30,7 @@
 | guildId    | string   | サーバー ID                        |
 | botId      | string   | bot の ID                          |
 | searchword | string   | youtube で検索する際のハッシュタグ |
-| searchedAt | string   | 最後の検索 api を叩いた日時        |
+| LastSearchedAt | string   | 最後の検索 api を叩いた日時        |
 | createdAt  | datetime | 作成日時 　　　　　　　　　　　　  |
 | updatedAt  | datetime | 更新日時 　　　　　　　　　　　　  |
 | deletedAt  | datetime | 削除日時 　　　　　　　　　　　　  |

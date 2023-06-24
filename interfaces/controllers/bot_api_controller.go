@@ -4,7 +4,6 @@ import (
 	"app/domain"
 	"app/interfaces/database"
 	"app/usecase"
-	"strconv"
 
 	"github.com/gin-gonic/gin"
 	"gorm.io/gorm"
@@ -24,19 +23,17 @@ func NewBotApiController(sqlHandler *gorm.DB) *BotApiController {
 	}
 }
 
-func (controller *BotApiController) Create(c Context) {
-	b := domain.Bot{}
-	c.Bind(&b)
-	err := controller.Interactor.Add(b)
+func (controller *BotApiController) FetchPublicOneById(c Context) {
+	id := c.Param("id")
+	bot, err := controller.Interactor.FetchPublicOneById(id)
 	if err != nil {
 		c.JSON(500, err.Error())
-		return
 	}
-	c.JSON(201, "ok")
+	c.JSON(200, bot)
 }
 
-func (controller *BotApiController) Index(c Context) {
-	bots, err := controller.Interactor.PublicBots()
+func (controller *BotApiController) FetchAllPublic(c Context) {
+	bots, err := controller.Interactor.FetchAllPublic()
 	if err != nil {
 		c.JSON(500, gin.H{"message": err.Error()})
 		return
@@ -44,11 +41,13 @@ func (controller *BotApiController) Index(c Context) {
 	c.JSON(200, bots)
 }
 
-func (controller *BotApiController) Show(c Context) {
-	id, _ := strconv.Atoi(c.Param("id"))
-	bot, err := controller.Interactor.PublicBotById(id)
+func (controller *BotApiController) Create(c Context) {
+	b := domain.Bot{}
+	c.Bind(&b)
+	err := controller.Interactor.Create(b)
 	if err != nil {
 		c.JSON(500, err.Error())
+		return
 	}
-	c.JSON(200, bot)
+	c.JSON(201, "ok")
 }

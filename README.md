@@ -27,10 +27,15 @@ migrate -database "mysql://default:secret@tcp(mariadb:3306)/default" -path db/mi
 ```
 5. seeding
 ```
-go run db/seeds/init.go db/seeds/bot.go
+go run db/seeds/init.go db/seeds/bot.go db/seeds/guild.go
 ```
 
-5. bot起動
+6. コマンド登録
+```
+chmod +x command.sh && ./command.sh
+```
+
+7. bot起動
 ```
 go run main.go
 ```

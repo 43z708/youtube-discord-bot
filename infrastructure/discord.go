@@ -6,6 +6,7 @@ import (
 	"log"
 
 	"github.com/bwmarrin/discordgo"
+	"gorm.io/gorm"
 )
 
 var (
@@ -13,20 +14,21 @@ var (
 	err error
 )
 
-func Discord() {
+func Discord(Init *gorm.DB) {
 
-	BotController := controllers.NewBotController(Init())
+	BotController := controllers.NewBotController(Init)
 
-	bots := BotController.Index()
+	bots := BotController.FetchAll()
 
-	CreateSession(bots)
+	CreateSession(bots, Init)
 
 	StartSession()
 
 }
 
 // Discordセッションの作成
-func CreateSession(bots domain.Bots) {
+func CreateSession(bots domain.Bots, Init *gorm.DB) {
+	ChannelController := controllers.NewChannelController(Init)
 	for _, bot := range bots {
 		discordToken := bot.Token
 		dg, err = discordgo.New("Bot " + discordToken)
@@ -34,7 +36,9 @@ func CreateSession(bots domain.Bots) {
 			log.Fatalf("Error creating Discord session: %s", err.Error())
 		}
 
-		dg.AddHandler(messageCreate)
+		dg.AddHandler(ChannelController.Create)
+		dg.AddHandler(ChannelController.Update)
+		dg.AddHandler(ChannelController.Delete)
 	}
 }
 

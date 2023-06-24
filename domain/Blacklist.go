@@ -8,3 +8,5 @@ type Blacklist struct {
 	Guild       Guild `gorm:"foreignKey:GuildID"`
 	Bot         Bot   `gorm:"foreignKey:BotID"`
 }
+
+type Blacklists = []Blacklist

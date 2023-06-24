@@ -8,11 +8,11 @@
 4. 正常系の場合、blacklist と照合し、問題ない動画を movies の url を該当のチャンネルに投稿
 5. movies に登録
 
-※channels/searchedAt を使うことで、無駄な api を叩いたり、肥大化しやすい movies テーブルの論理削除をしやすいようにする
+※channels/LastSearchedAt を使うことで、無駄な api を叩いたり、肥大化しやすい movies テーブルの論理削除をしやすいようにする
 
 ## 1 週間おきなどに 1 度 batch 処理
 
-1. channels/searchedAt 以前
+1. channels/LastSearchedAt 以前
 2. movies で直近 1 週間分を論理削除
 
 ## discord のコマンド

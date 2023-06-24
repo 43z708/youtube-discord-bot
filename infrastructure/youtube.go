@@ -37,9 +37,9 @@ func Youtube() {
 	// cronジョブの作成
 	c := cron.New()
 
-	// 1分(動作確認のため仮)ごとに動画を投稿するジョブを追加
+	// 1分(動作確認のため仮)ごとに動画を投稿するジョブを追加 */1 * * * *
 	// 3時間おきの場合、 0 */3 * * *
-	_, err = c.AddFunc("*/1 * * * *", func() {
+	_, err = c.AddFunc("0 */3 * * *", func() {
 		postLatestYouTubeVideo(ytSvc, "1110531236151173150", "#test")
 	})
 	if err != nil {

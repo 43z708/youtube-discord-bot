@@ -5,7 +5,6 @@ import (
 	"app/interfaces/database"
 	"app/usecase"
 	"log"
-	"strconv"
 
 	"gorm.io/gorm"
 )
@@ -24,21 +23,20 @@ func NewBotController(sqlHandler *gorm.DB) *BotController {
 	}
 }
 
-func (controller *BotController) Index() domain.Bots {
-	bots, err := controller.Interactor.Bots()
-	if err != nil {
-		log.Fatalf("Error getting bots data: %s", err.Error())
-	}
-
-	return bots
-}
-
-func (controller *BotController) Show(i string) domain.Bot {
-	id, _ := strconv.Atoi(i)
-	bot, err := controller.Interactor.BotById(id)
+func (controller *BotController) FetchOneById(id string) domain.Bot {
+	bot, err := controller.Interactor.FetchOneById(id)
 
 	if err != nil {
 		log.Fatalf("Error getting bots data: %s", err.Error())
 	}
 	return bot
+}
+
+func (controller *BotController) FetchAll() domain.Bots {
+	bots, err := controller.Interactor.FetchAll()
+	if err != nil {
+		log.Fatalf("Error getting bots data: %s", err.Error())
+	}
+
+	return bots
 }

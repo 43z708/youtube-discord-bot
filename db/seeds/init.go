@@ -8,4 +8,5 @@ func main() {
 	db := infrastructure.Init()
 
 	BotSeeds(db)
+	GuildSeeds(db)
 }
