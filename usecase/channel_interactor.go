@@ -26,7 +26,7 @@ func (interactor *ChannelInteractor) Create(b domain.Channel) (err error) {
 	return err
 }
 
-func (interactor *ChannelInteractor) Update(b domain.Channel) (err error) {
+func (interactor *ChannelInteractor) Update(b *domain.Channel) (err error) {
 	err = interactor.ChannelRepository.Update(&b)
 	return err
 }

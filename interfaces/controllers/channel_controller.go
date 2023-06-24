@@ -59,7 +59,7 @@ func (controller *ChannelController) Create(s *discordgo.Session, i *discordgo.I
 	// スラッシュコマンドのデータを取得する
 	command := i.ApplicationCommandData()
 
-	// /channel コマンド以外は無視する
+	// /create-channel コマンド以外は無視する
 	if command.Name != "create-channel" {
 		return
 	}
@@ -172,7 +172,7 @@ func (controller *ChannelController) Update(s *discordgo.Session, c *discordgo.C
 	channel.Name = c.Channel.Name
 	channel.Searchword = c.Channel.Topic
 
-	err = controller.ChannelInteractor.Update(channel)
+	err = controller.ChannelInteractor.Update(&channel)
 
 	if err != nil {
 		s.ChannelMessageSend(channel.ID, "データの更新に失敗しました。:"+err.Error())
