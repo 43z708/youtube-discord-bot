@@ -36,8 +36,11 @@ func CreateSession(bots domain.Bots, Init *gorm.DB) {
 			log.Fatalf("Error creating Discord session: %s", err.Error())
 		}
 
+		// create-channelコマンドの処理
 		dg.AddHandler(ChannelController.Create)
+		// DBに保存しているチャンネル情報が変更されたときの処理
 		dg.AddHandler(ChannelController.Update)
+		// DBに保存されているチャンネルがdiscord側で削除されたときにDBも削除する処理
 		dg.AddHandler(ChannelController.Delete)
 	}
 }
