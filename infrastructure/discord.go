@@ -30,6 +30,7 @@ func Discord(Init *gorm.DB) {
 func CreateSession(bots domain.Bots, Init *gorm.DB) {
 	ChannelController := controllers.NewChannelController(Init)
 	GuildController := controllers.NewGuildController(Init)
+	BlacklistController := controllers.NewBlacklistController(Init)
 	for _, bot := range bots {
 		discordToken := bot.Token
 		dg, err = discordgo.New("Bot " + discordToken)
@@ -47,6 +48,12 @@ func CreateSession(bots domain.Bots, Init *gorm.DB) {
 		dg.AddHandler(GuildController.Create)
 		// register-apikeyコマンドの処理
 		dg.AddHandler(GuildController.Update)
+		// get-blacklistコマンド
+		dg.AddHandler(BlacklistController.FetchBlacklist)
+		// add-blacklistコマンド
+		dg.AddHandler(BlacklistController.Create)
+		// remove-blacklistコマンド
+		dg.AddHandler(BlacklistController.Delete)
 	}
 }
 
