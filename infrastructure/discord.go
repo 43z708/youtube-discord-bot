@@ -29,6 +29,7 @@ func Discord(Init *gorm.DB) {
 // Discordセッションの作成
 func CreateSession(bots domain.Bots, Init *gorm.DB) {
 	ChannelController := controllers.NewChannelController(Init)
+	GuildController := controllers.NewGuildController(Init)
 	for _, bot := range bots {
 		discordToken := bot.Token
 		dg, err = discordgo.New("Bot " + discordToken)
@@ -42,6 +43,10 @@ func CreateSession(bots domain.Bots, Init *gorm.DB) {
 		dg.AddHandler(ChannelController.Update)
 		// DBに保存されているチャンネルがdiscord側で削除されたときにDBも削除する処理
 		dg.AddHandler(ChannelController.Delete)
+		// bot招待時にカテゴリとadmin-channelを作成しDBに保存する処理
+		dg.AddHandler(GuildController.Create)
+		// register-apikeyコマンドの処理
+		dg.AddHandler(GuildController.Update)
 	}
 }
 

@@ -15,9 +15,6 @@ func (repo *ChannelRepository) FetchOneById(i string) (domain.Channel, error) {
 	var channel domain.Channel
 	id, _ := strconv.Atoi(i)
 	result := repo.SqlHandler.First(&channel, id)
-	if result.Error != nil {
-		panic(result.Error)
-	}
 
 	return channel, result.Error
 }
@@ -26,7 +23,7 @@ func (repo *ChannelRepository) FetchAllByBotID(botID string) (domain.Channels, e
 	channels := make([]domain.Channel, 0)
 	result := repo.SqlHandler.Where("bot_id = ?", botID).Find(&channels)
 	if result.Error != nil {
-		panic(result.Error)
+		return channels, result.Error
 	}
 	var Channels domain.Channels
 	for _, channel := range channels {
@@ -51,7 +48,7 @@ func (repo *ChannelRepository) FetchAllByGuildID(guildID string) (domain.Channel
 	channels := make([]domain.Channel, 0)
 	result := repo.SqlHandler.Where("guild_id = ?", guildID).Find(&channels)
 	if result.Error != nil {
-		panic(result.Error)
+		return channels, result.Error
 	}
 	var Channels domain.Channels
 	for _, channel := range channels {
@@ -75,9 +72,6 @@ func (repo *ChannelRepository) FetchAllByGuildID(guildID string) (domain.Channel
 func (repo *ChannelRepository) FetchAll() (domain.Channels, error) {
 	channels := make([]domain.Channel, 0)
 	result := repo.SqlHandler.Find(&channels)
-	if result.Error != nil {
-		panic(result.Error)
-	}
 
 	return channels, result.Error
 }

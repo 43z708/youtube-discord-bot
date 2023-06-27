@@ -20,7 +20,6 @@
 
 ## discord のコマンド
 - "/register-apikey YOUTUBEのAPIKEY" でapikeyの登録・更新
-- "/create-category カテゴリ名" でbotが投稿するチャンネルの親カテゴリを作成、変更・削除はhandlerで同期させる
 - "/create-channel チャンネル名 検索ワード" でチャンネルの作成および検索ワードの設定、変更・削除はhandlerで同期させる
 ※検索ワードは、チャンネルのTopic欄の内容とする。
 - ブラックリストの登録 "/add-blacklist チャンネルURL" で登録
@@ -30,5 +29,4 @@
 ## 管理者マニュアル
 1. 導入したいサーバーにbotを招待
 2. "/register-apikey YOUTUBEのAPIKEY" でapikeyの登録・更新
-3. "/create-category カテゴリ名" でbotが投稿するチャンネルの親カテゴリを作成
-4. "/create-channel チャンネル名 検索ワード" でチャンネルの作成および検索ワードの設定
+3. "/create-channel チャンネル名 検索ワード" でチャンネルの作成および検索ワードの設定

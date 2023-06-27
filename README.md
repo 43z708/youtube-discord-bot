@@ -32,10 +32,18 @@ go run db/seeds/init.go db/seeds/bot.go db/seeds/guild.go
 
 6. コマンド登録
 ```
-chmod +x command.sh && ./command.sh
+chmod +x command-up.sh && ./command-up.sh
+
+<!-- 削除時 -->
+chmod +x command-down.sh && ./command-down.sh
 ```
 
 7. bot起動
 ```
 go run main.go
 ```
+
+
+
+※/create-channelにて、
+ChannelController.UpdateとGuildController.Createが競合しておかしいので修正必要

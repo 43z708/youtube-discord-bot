@@ -5,9 +5,13 @@ import (
 	"app/interfaces/database"
 	"app/usecase"
 	"app/utilities"
+	"errors"
+	"fmt"
 	"log"
+	"os"
 
 	"github.com/bwmarrin/discordgo"
+	"github.com/joho/godotenv"
 	"gorm.io/gorm"
 )
 
@@ -61,8 +65,134 @@ func (controller *GuildController) FetchAll() domain.Guilds {
 	return guilds
 }
 
-func (controller *GuildController) Create(s *discordgo.Session, i *discordgo.InteractionCreate) {
+func (controller *GuildController) Create(s *discordgo.Session, e *discordgo.GuildCreate) {
+	err := godotenv.Load()
+	if err != nil {
+		log.Fatalf("Error loading dotenv: %s", err.Error())
+	}
 
+	// コマンドの登録
+	utilities.RegisterCommand(s, e)
+
+	// DBにあるサーバー情報を取得
+	guild, err := controller.GuildInteractor.FetchOneById(e.Guild.ID)
+
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			// DBにサーバー情報がない場合、チャンネル等作成して保存
+
+			category, err := s.GuildChannelCreateComplex(e.Guild.ID, discordgo.GuildChannelCreateData{
+				Name: os.Getenv("CATEGORY_NAME"),
+				Type: discordgo.ChannelTypeGuildCategory,
+			})
+			if err != nil {
+				log.Println("Error creating category:", err)
+				return
+			}
+
+			channel, err := s.GuildChannelCreateComplex(e.Guild.ID, discordgo.GuildChannelCreateData{
+				Name:     "admin-channel",
+				Type:     discordgo.ChannelTypeGuildText,
+				ParentID: category.ID,
+				PermissionOverwrites: []*discordgo.PermissionOverwrite{
+					{
+						ID:   e.Guild.ID, // This is the ID of the @everyone role
+						Type: discordgo.PermissionOverwriteTypeRole,
+						Deny: discordgo.PermissionViewChannel, // Deny view permission for everyone
+					},
+					{
+						ID:   e.Guild.OwnerID, // This is the ID of the admin
+						Type: discordgo.PermissionOverwriteTypeMember,
+						Allow: discordgo.PermissionAdministrator |
+							discordgo.PermissionViewChannel |
+							discordgo.PermissionSendMessages |
+							discordgo.PermissionReadMessageHistory,
+					},
+					{
+						ID:   s.State.User.ID, // This is the ID of the bot
+						Type: discordgo.PermissionOverwriteTypeMember,
+						Allow: discordgo.PermissionViewChannel |
+							discordgo.PermissionSendMessages |
+							discordgo.PermissionReadMessageHistory,
+					},
+				},
+			})
+			if err != nil {
+				s.ChannelMessageSend(channel.ID, "チャンネルの作成に失敗しました。:"+err.Error())
+				return
+			}
+			guild := domain.Guild{
+				ID:             e.Guild.ID,
+				Name:           e.Guild.Name,
+				CategoryID:     category.ID,
+				BotID:          s.State.User.ID,
+				AdminChannelID: channel.ID,
+			}
+
+			controller.GuildInteractor.Create(guild)
+			if err != nil {
+				s.ChannelMessageSend(channel.ID, "DBの保存に失敗しました。:"+err.Error())
+				return
+			}
+			s.ChannelMessageSend(guild.AdminChannelID, "まずは/register-apikeyコマンドでyoutubeのapikeyを登録してください。")
+			return
+		}
+	} else {
+		// guildデータがDBに存在した場合（botがキックされたケースを想定）
+		categoryID := ""
+		if guild.CategoryID == "" {
+			category, err := s.GuildChannelCreateComplex(e.Guild.ID, discordgo.GuildChannelCreateData{
+				Name: os.Getenv("CATEGORY_NAME"),
+				Type: discordgo.ChannelTypeGuildCategory,
+			})
+			if err != nil {
+				log.Println("Error creating category:", err)
+				return
+			}
+			categoryID = category.ID
+			guild.CategoryID = categoryID
+		} else {
+			categoryID = guild.CategoryID
+		}
+
+		if guild.AdminChannelID == "" {
+			channel, err := s.GuildChannelCreateComplex(e.Guild.ID, discordgo.GuildChannelCreateData{
+				Name:     "admin-channel",
+				Type:     discordgo.ChannelTypeGuildText,
+				ParentID: categoryID,
+				PermissionOverwrites: []*discordgo.PermissionOverwrite{
+					{
+						ID:   e.Guild.ID, // This is the ID of the @everyone role
+						Type: discordgo.PermissionOverwriteTypeRole,
+						Deny: discordgo.PermissionViewChannel, // Deny view permission for everyone
+					},
+					{
+						ID:   e.Guild.OwnerID, // This is the ID of the admin
+						Type: discordgo.PermissionOverwriteTypeMember,
+						Allow: discordgo.PermissionAdministrator |
+							discordgo.PermissionViewChannel |
+							discordgo.PermissionSendMessages |
+							discordgo.PermissionReadMessageHistory,
+					},
+					{
+						ID:   s.State.User.ID, // This is the ID of the bot
+						Type: discordgo.PermissionOverwriteTypeMember,
+						Allow: discordgo.PermissionViewChannel |
+							discordgo.PermissionSendMessages |
+							discordgo.PermissionReadMessageHistory,
+					},
+				},
+			})
+			if err != nil {
+				s.ChannelMessageSend(channel.ID, "チャンネルの作成に失敗しました。:"+err.Error())
+				return
+			}
+			guild.AdminChannelID = channel.ID
+		}
+
+		controller.GuildInteractor.Update(&guild)
+
+	}
 }
 
 func (controller *GuildController) Update(s *discordgo.Session, i *discordgo.InteractionCreate) {
@@ -73,83 +203,38 @@ func (controller *GuildController) Update(s *discordgo.Session, i *discordgo.Int
 		// スラッシュコマンドのデータを取得する
 		command := i.ApplicationCommandData()
 
-		// /init-youtube-bot コマンド以外は無視する
-		if command.Name != "init-youtube-bot" {
-			return
-		}
-
-		// ユーザーが管理者であるかをチェックする
-		isAdmin := utilities.IsAdmin(s, i)
-
-		// 管理者以外のユーザーは処理を終了する
-		if !isAdmin {
-			utilities.InteractionReply(s, i, "このコマンドは管理者のみが実行できます。")
-			return
-		}
-
-		// youtube api keyを取得
-		apiKey := command.Options[0].StringValue()
-
-		// DBにあるサーバー情報を取得
-		guild, err := controller.GuildInteractor.FetchOneById(i.GuildID)
-
-		if err != nil {
-			s.ChannelMessageSend(i.ChannelID, "データの取得に失敗しました。:"+err.Error())
-			return
-		}
-		guild.YoutubeApiKey = apiKey
-
-		err = controller.GuildInteractor.Update(&guild)
-
-		if err != nil {
-			s.ChannelMessageSend(i.ChannelID, "データの更新に失敗しました。:"+err.Error())
-			return
-		}
-
-		// カテゴリ名がすでに登録されている場合は終了
-		if guild.CategoryName != "" {
-			s.ChannelMessage(i.ChannelID, "Botの準備が完了しました。\"/create-channel\"コマンドでbotが投稿するチャンネルと検索ワードを設定・作成すれば設定完了です。")
-			return
-		}
-
-		// カテゴリ入力を送信
-		s.ChannelMessageSendComplex(i.ChannelID, &discordgo.MessageSend{
-			Content: "YouTubeの動画URLを投稿するチャンネルの親カテゴリの名称を入力してください",
-			Components: []discordgo.MessageComponent{
-				&discordgo.ActionsRow{
-					Components: []discordgo.MessageComponent{
-						&discordgo.TextInput{
-							CustomID:    "category",
-							Placeholder: "カテゴリ名をここに入力",
-						},
-					},
-				},
-			},
-		})
-	} else if i.Type == discordgo.InteractionMessageComponent {
-		if i.MessageComponentData().CustomID == "category" {
-
-			// ユーザーがテキスト入力を行ったときの処理をここに書く
-			category := i.MessageComponentData().Values[0]
+		// /register-apikey コマンド以外は無視する
+		if command.Name == "register-apikey" {
 
 			// DBにあるサーバー情報を取得
 			guild, err := controller.GuildInteractor.FetchOneById(i.GuildID)
 
-			if err != nil {
-				s.ChannelMessageSend(i.ChannelID, "データの取得に失敗しました。:"+err.Error())
+			if guild.AdminChannelID != i.ChannelID {
+				utilities.InteractionReply(s, i, fmt.Sprintf("このコマンドは <#%s> でのみ許可されたコマンドです。", guild.AdminChannelID))
 				return
 			}
-			guild.CategoryName = category
+
+			// youtube api keyを取得
+			apiKey := command.Options[0].StringValue()
+
+			if err != nil {
+				utilities.InteractionReply(s, i, "データの取得に失敗しました。:"+err.Error())
+				return
+			}
+			guild.YoutubeApiKey = apiKey
 
 			err = controller.GuildInteractor.Update(&guild)
 
 			if err != nil {
-				s.ChannelMessageSend(i.ChannelID, "データの更新に失敗しました。:"+err.Error())
+				utilities.InteractionReply(s, i, "データの更新に失敗しました。:"+err.Error())
 				return
 			}
-			// 完了メッセージ
-			s.ChannelMessage(i.ChannelID, "Botの準備が完了しました。\"/create-channel\"コマンドでbotが投稿するチャンネルと検索ワードを設定・作成すれば設定完了です。")
+
+			// カテゴリ名がすでに登録されている場合は終了
+			utilities.InteractionReply(s, i, "Botの準備が完了しました。\"/create-channel\"コマンドでbotが投稿するチャンネルと検索ワードを設定・作成すれば設定完了です。")
+			return
 		}
+
 	}
 }
 

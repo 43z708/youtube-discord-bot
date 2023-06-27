@@ -15,9 +15,6 @@ func (repo *GuildRepository) FetchPublicOneById(i string) (domain.PublicGuild, e
 	var guild domain.Guild
 	id, _ := strconv.Atoi(i)
 	result := repo.SqlHandler.First(&guild, id)
-	if result.Error != nil {
-		panic(result.Error)
-	}
 	publicGuild := domain.PublicGuild{
 		ID:    guild.ID,
 		Name:  guild.Name,
@@ -31,7 +28,8 @@ func (repo *GuildRepository) FetchPublicAllByBotID(botID string) (domain.PublicG
 	guilds := make([]domain.Guild, 0)
 	result := repo.SqlHandler.Where("bot_id = ?", botID).Find(&guilds)
 	if result.Error != nil {
-		panic(result.Error)
+		publicGuilds := make(domain.PublicGuilds, 0)
+		return publicGuilds, result.Error
 	}
 	var publicGuilds domain.PublicGuilds
 	for _, guild := range guilds {
@@ -50,19 +48,12 @@ func (repo *GuildRepository) FetchOneById(i string) (domain.Guild, error) {
 	var guild domain.Guild
 	id, _ := strconv.Atoi(i)
 	result := repo.SqlHandler.First(&guild, id)
-	if result.Error != nil {
-		panic(result.Error)
-	}
 	return guild, result.Error
 }
 
 func (repo *GuildRepository) FetchAll() (domain.Guilds, error) {
 	guilds := make([]domain.Guild, 0)
 	result := repo.SqlHandler.Find(&guilds)
-	if result.Error != nil {
-		panic(result.Error)
-	}
-
 	return guilds, result.Error
 }
 
