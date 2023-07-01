@@ -174,7 +174,11 @@ func (controller *YoutubeController) PostLatestYoutubeVideo(ytSvc *youtube.Servi
 		// youtubeのAPIは一度につき50件までなのでpagenationで対応
 		for {
 			call := ytSvc.Search.List([]string{"id"})
-			call.Q(channel.Searchword).MaxResults(50).Type("video").PublishedAfter(channel.LastSearchedAt.Format(time.RFC3339))
+			if channel.LastSearchedAt.IsZero() {
+				call.Q(channel.Searchword).MaxResults(1).Type("video")
+			} else {
+				call.Q(channel.Searchword).MaxResults(50).Type("video").PublishedAfter(channel.LastSearchedAt.Format(time.RFC3339))
+			}
 			if nextPageToken != "" {
 				call.PageToken(nextPageToken)
 			}
@@ -208,6 +212,11 @@ func (controller *YoutubeController) PostLatestYoutubeVideo(ytSvc *youtube.Servi
 			nextPageToken = response.NextPageToken
 			if nextPageToken == "" {
 				break
+			}
+			channel.LastSearchedAt = time.Now()
+			err = controller.ChannelInteractor.Update(&channel)
+			if err != nil {
+				s.ChannelMessageSend(guild.AdminChannelID, "DBの更新に失敗しました。:"+err.Error())
 			}
 		}
 
