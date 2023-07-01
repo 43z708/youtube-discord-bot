@@ -11,9 +11,9 @@ type Channel struct {
 	LastSearchedAt time.Time `gorm:"type:timestamp;default:null"` // 最後の検索 api を叩いた日時
 	CreatedAt      time.Time `gorm:"not null;default:current_timestamp"`
 	UpdatedAt      time.Time `gorm:"not null;default:current_timestamp;autoUpdateTime"`
-	DeletedAt      *time.Time
-	Guild          Guild `gorm:"foreignKey:GuildID"`
-	Bot            Bot   `gorm:"foreignKey:BotID"`
+	DeletedAt      time.Time `gorm:"type:timestamp;default:null"`
+	Guild          Guild     `gorm:"foreignKey:GuildID"`
+	Bot            Bot       `gorm:"foreignKey:BotID"`
 }
 
 type Channels []Channel
