@@ -76,7 +76,7 @@ func (controller *BlacklistController) FetchBlacklist(s *discordgo.Session, i *d
 			blacklists, err := controller.BlacklistInteractor.FetchAllByGuildID(i.GuildID)
 			if err != nil {
 				if errors.Is(err, gorm.ErrRecordNotFound) {
-					utilities.InteractionReply(s, i, "ブラックリストに登録がありません。\n /add-blacklistコマンドで登録が可能です。")
+					utilities.InteractionReply(s, i, "ブラックリストに登録がありません。\n /add-blacklistコマンドで登録が可能です。"+utilities.ExplainGetYoutubeChannelID)
 					return
 				}
 				utilities.InteractionReply(s, i, "DBからのサーバー情報の取得に失敗しました。:"+err.Error())
@@ -85,12 +85,12 @@ func (controller *BlacklistController) FetchBlacklist(s *discordgo.Session, i *d
 
 			list := make([]string, 0)
 			for _, blacklist := range blacklists {
-				list = append(list, blacklist.Distributor)
+				list = append(list, "https://www.youtube.com/channel/"+blacklist.Distributor)
 			}
 			if len(list) > 0 {
 				utilities.InteractionReply(s, i, "ブラックリストは以下です。\n"+strings.Join(list, "\n"))
 			} else {
-				utilities.InteractionReply(s, i, "ブラックリストに登録がありません。\n /add-blacklistコマンドで登録が可能です。")
+				utilities.InteractionReply(s, i, "ブラックリストに登録がありません。\n /add-blacklistコマンドで登録が可能です。"+utilities.ExplainGetYoutubeChannelID)
 			}
 		}
 	}
@@ -129,7 +129,7 @@ func (controller *BlacklistController) Create(s *discordgo.Session, i *discordgo
 			_, err = controller.BlacklistInteractor.FetchOneByDistributor(Distributor)
 			// errがnilである場合は重複データが存在するということ
 			if err == nil {
-				utilities.InteractionReply(s, i, Distributor+" はすでにブラックリストに登録されています。")
+				utilities.InteractionReply(s, i, "https://www.youtube.com/channel/"+Distributor+" はすでにブラックリストに登録されています。")
 				return
 			}
 			b := domain.Blacklist{
@@ -143,7 +143,7 @@ func (controller *BlacklistController) Create(s *discordgo.Session, i *discordgo
 				return
 			}
 			// 追加完了通知
-			utilities.InteractionReply(s, i, fmt.Sprintf("ブラックリストに `%s` を追加しました。", Distributor))
+			utilities.InteractionReply(s, i, fmt.Sprintf("ブラックリストに https://www.youtube.com/channel/`%s` を追加しました。", Distributor))
 		}
 	}
 }
@@ -175,7 +175,7 @@ func (controller *BlacklistController) Delete(s *discordgo.Session, i *discordgo
 			blacklist, err := controller.BlacklistInteractor.FetchOneByDistributor(command.Options[0].StringValue())
 			if err != nil {
 				if errors.Is(err, gorm.ErrRecordNotFound) {
-					utilities.InteractionReply(s, i, command.Options[0].StringValue()+"はブラックリストに登録されていません。")
+					utilities.InteractionReply(s, i, command.Options[0].StringValue()+"はブラックリストに登録されていません。"+utilities.ExplainGetYoutubeChannelID)
 					return
 				} else {
 					utilities.InteractionReply(s, i, "データの取得でエラーが発生しました。")
@@ -183,7 +183,7 @@ func (controller *BlacklistController) Delete(s *discordgo.Session, i *discordgo
 			}
 
 			controller.BlacklistInteractor.Delete(blacklist.ID)
-			utilities.InteractionReply(s, i, command.Options[0].StringValue()+" をブラックリストから削除しました。")
+			utilities.InteractionReply(s, i, "https://www.youtube.com/channel/"+command.Options[0].StringValue()+" をブラックリストから削除しました。")
 		}
 		return
 	}

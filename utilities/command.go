@@ -66,6 +66,26 @@ func RegisterCommand(s *discordgo.Session, event *discordgo.GuildCreate) {
 			Name:        "get-blacklist",
 			Description: "Get the blacklist",
 		},
+		{
+			Name:        "start-notification",
+			Description: "Start notifications of youtube search results at specified time intervals (unit: hours)",
+			Options: []*discordgo.ApplicationCommandOption{
+				{
+					Type:        discordgo.ApplicationCommandOptionInteger,
+					Name:        "time_interval",
+					Description: "Integer from 1 to 23.Default 3",
+					Required:    false,
+				},
+			},
+		},
+		{
+			Name:        "stop-notification",
+			Description: "Stop notifications of youtube search results",
+		},
+		{
+			Name:        "help",
+			Description: "Get the command list",
+		},
 	}
 
 	for _, command := range commands {

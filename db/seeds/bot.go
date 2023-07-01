@@ -19,10 +19,11 @@ func BotSeeds(db *gorm.DB) error {
 	botToken01 := os.Getenv("BOT_TOKEN01")
 
 	bot := domain.Bot{
-		ID:          botId01,
-		Name:        "test-bot01",
-		Token:       botToken01,
-		IsAvailable: false,
+		ID:           botId01,
+		Name:         "test-bot01",
+		TimeInterval: 3,
+		Token:        botToken01,
+		IsAvailable:  true,
 	}
 	err = db.Create(&bot).Error
 	if err != nil {

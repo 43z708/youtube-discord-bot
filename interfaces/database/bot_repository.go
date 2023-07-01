@@ -19,9 +19,10 @@ func (repo *BotRepository) FetchPublicOneById(i string) (domain.PublicBot, error
 		panic(result.Error)
 	}
 	publicBot := domain.PublicBot{
-		ID:          bot.ID,
-		Name:        bot.Name,
-		IsAvailable: bot.IsAvailable,
+		ID:           bot.ID,
+		Name:         bot.Name,
+		TimeInterval: bot.TimeInterval,
+		IsAvailable:  bot.IsAvailable,
 	}
 
 	return publicBot, result.Error
@@ -36,9 +37,10 @@ func (repo *BotRepository) FetchPublicAll() (domain.PublicBots, error) {
 	var publicBots domain.PublicBots
 	for _, bot := range bots {
 		publicBot := domain.PublicBot{
-			ID:          bot.ID,
-			Name:        bot.Name,
-			IsAvailable: bot.IsAvailable,
+			ID:           bot.ID,
+			Name:         bot.Name,
+			TimeInterval: bot.TimeInterval,
+			IsAvailable:  bot.IsAvailable,
 		}
 		publicBots = append(publicBots, publicBot)
 	}
@@ -66,19 +68,22 @@ func (repo *BotRepository) FetchAll() (domain.Bots, error) {
 	return bots, result.Error
 }
 
-func (repo *BotRepository) Create(b domain.Bot) (string, error) {
+func (repo *BotRepository) Create(b domain.Bot) error {
 
 	result := repo.SqlHandler.Create(&b)
 	if result.Error != nil {
-		return "", result.Error
+		return result.Error
 	}
-	return b.ID, result.Error
+	return nil
 }
 
-// func (repo *BotRepository) UpdateBot(bot *domain.Bot) error {
-// 	repo.SqlHandler.Conn.Save(&bot)
-// 	return nil
-// }
+func (repo *BotRepository) Update(b *domain.Bot) error {
+	result := repo.SqlHandler.Save(&b)
+	if result.Error != nil {
+		return result.Error
+	}
+	return nil
+}
 
 // func (repo *BotRepository) DeleteBot(id int) error {
 // 	bot := make([]domain.Bot, 0)

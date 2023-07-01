@@ -18,7 +18,7 @@ func main() {
 	infrastructure.Router(Init)
 	infrastructure.Discord(Init)
 
-	infrastructure.Youtube()
+	// infrastructure.Youtube()
 
 	// // Discordセッションの作成
 	// controller.CreateSession()

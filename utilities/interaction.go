@@ -1,6 +1,8 @@
 package utilities
 
-import "github.com/bwmarrin/discordgo"
+import (
+	"github.com/bwmarrin/discordgo"
+)
 
 func IsAdmin(s *discordgo.Session, i *discordgo.InteractionCreate) bool {
 
@@ -30,6 +32,15 @@ func InteractionReply(s *discordgo.Session, i *discordgo.InteractionCreate, cont
 		Data: &discordgo.InteractionResponseData{
 			Content: content,
 			Flags:   discordgo.MessageFlagsEphemeral,
+		},
+	})
+}
+
+func InteractionNonEphemeralReply(s *discordgo.Session, i *discordgo.InteractionCreate, content string) {
+	s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
+		Type: discordgo.InteractionResponseChannelMessageWithSource,
+		Data: &discordgo.InteractionResponseData{
+			Content: content,
 		},
 	})
 }

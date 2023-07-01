@@ -26,6 +26,10 @@ func (interactor *BotInteractor) FetchPublicOneById(identifier string) (bot doma
 }
 
 func (interactor *BotInteractor) Create(b domain.Bot) (err error) {
-	_, err = interactor.BotRepository.Create(b)
+	err = interactor.BotRepository.Create(b)
+	return err
+}
+func (interactor *BotInteractor) Update(b *domain.Bot) (err error) {
+	err = interactor.BotRepository.Update(b)
 	return err
 }

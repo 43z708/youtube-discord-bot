@@ -134,7 +134,7 @@ func (controller *GuildController) Create(s *discordgo.Session, e *discordgo.Gui
 				s.ChannelMessageSend(channel.ID, "DBの保存に失敗しました。:"+err.Error())
 				return
 			}
-			s.ChannelMessageSend(guild.AdminChannelID, "まずは/register-apikeyコマンドでyoutubeのapikeyを登録してください。")
+			s.ChannelMessageSend(guild.AdminChannelID, "まずは`/register-apikey`コマンドでyoutubeのapikeyを登録してください。`/help`でbotの使い方を見ることができます。")
 			return
 		}
 	} else {
@@ -231,7 +231,7 @@ func (controller *GuildController) Update(s *discordgo.Session, i *discordgo.Int
 			}
 
 			// カテゴリ名がすでに登録されている場合は終了
-			utilities.InteractionReply(s, i, "Botの準備が完了しました。\"/create-channel\"コマンドでbotが投稿するチャンネルと検索ワードを設定・作成すれば設定完了です。")
+			utilities.InteractionReply(s, i, "Botの準備が完了しました。`/create-channel`コマンドでbotが投稿するチャンネルと検索ワードを必要な分だけ設定し、`/start-notification`コマンドでyoutube動画の通知が稼働します。\nコマンド一覧は`/help`で出力されます。")
 			return
 		}
 
@@ -239,4 +239,88 @@ func (controller *GuildController) Update(s *discordgo.Session, i *discordgo.Int
 }
 
 func (controller *GuildController) Delete(s *discordgo.Session, c *discordgo.ChannelDelete) {
+}
+
+func (controller *GuildController) Help(s *discordgo.Session, i *discordgo.InteractionCreate) {
+
+	// コマンドの場合（最初に発火）
+	if i.Type == discordgo.InteractionApplicationCommand {
+
+		// スラッシュコマンドのデータを取得する
+		command := i.ApplicationCommandData()
+
+		// /register-apikey コマンド以外は無視する
+		if command.Name == "help" {
+
+			// DBにあるサーバー情報を取得
+			guild, err := controller.GuildInteractor.FetchOneById(i.GuildID)
+
+			if err != nil {
+				utilities.InteractionReply(s, i, "データの取得に失敗しました。:"+err.Error())
+				return
+			}
+
+			if guild.AdminChannelID != i.ChannelID {
+				utilities.InteractionReply(s, i, fmt.Sprintf("このコマンドは <#%s> でのみ許可されたコマンドです。", guild.AdminChannelID))
+				return
+			}
+
+			// コマンド一覧
+			embed := &discordgo.MessageEmbed{
+				Author: &discordgo.MessageEmbedAuthor{},
+				Color:  0x00ff00, // Green
+				Fields: []*discordgo.MessageEmbedField{
+					{
+						Name:   "`/register-apikey`コマンド",
+						Value:  "Youtube動画投稿のためのapi keyの登録コマンド。",
+						Inline: false,
+					},
+					{
+						Name:   "`/create-channel`コマンド",
+						Value:  "指定した検索キーワードのyoutube動画を投稿するチャンネルを作るコマンド。\nchannel_nameにチャンネル名、search_wordsに検索キーワードを入力。\n検索キーワードは、\"Edit Channel\"→\"Overview\"→\"CHANNEL TOPIC\"にて変更可能。",
+						Inline: false,
+					},
+					{
+						Name:   "`/start-notification`コマンド",
+						Value:  "time_intervalに指定した時間間隔（単位：時間）でyoutubeの検索結果の通知を開始できるコマンド。\ntime_intervalに何も指定しない場合、defaultで3時間の設定となる。\n入力できる数値は1から23まで。",
+						Inline: false,
+					},
+					{
+						Name:   "`/stop-notification`コマンド",
+						Value:  "youtubeの検索結果の通知を停止できるコマンド。",
+						Inline: false,
+					},
+					{
+						Name:   "`/add-blacklist`コマンド",
+						Value:  "ブラックリストに含めたいチャンネルを設定できる。チャンネルIDを入力することで設定可能。" + utilities.ExplainGetYoutubeChannelID,
+						Inline: false,
+					},
+					{
+						Name:   "`/remove-blacklist`コマンド",
+						Value:  "ブラックリストに指定したチャンネルを削除できる。チャンネルIDを入力することで設定可能。",
+						Inline: false,
+					},
+					{
+						Name:   "`/get-blacklist`コマンド",
+						Value:  "ブラックリストに指定したチャンネル一覧を出力。",
+						Inline: false,
+					},
+				},
+				Title: "コマンド一覧",
+			}
+
+			data := &discordgo.InteractionResponseData{
+				Embeds: []*discordgo.MessageEmbed{embed},
+				Flags:  discordgo.MessageFlagsEphemeral,
+			}
+
+			err = s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
+				Type: discordgo.InteractionResponseChannelMessageWithSource,
+				Data: data,
+			})
+
+			return
+		}
+
+	}
 }

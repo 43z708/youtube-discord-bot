@@ -7,5 +7,6 @@ type BotRepository interface {
 	FetchPublicAll() (domain.PublicBots, error)
 	FetchOneById(string) (domain.Bot, error)
 	FetchAll() (domain.Bots, error)
-	Create(domain.Bot) (string, error)
+	Create(domain.Bot) error
+	Update(*domain.Bot) error
 }
