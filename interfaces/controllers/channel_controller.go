@@ -9,6 +9,7 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"time"
 
 	"github.com/bwmarrin/discordgo"
 	"github.com/joho/godotenv"
@@ -141,11 +142,12 @@ func (controller *ChannelController) Create(s *discordgo.Session, i *discordgo.I
 
 			// データの保存
 			c := domain.Channel{
-				ID:         channel.ID,
-				Name:       channel.Name,
-				GuildID:    channel.GuildID,
-				BotID:      i.Interaction.AppID,
-				Searchword: tag,
+				ID:             channel.ID,
+				Name:           channel.Name,
+				GuildID:        channel.GuildID,
+				BotID:          i.Interaction.AppID,
+				Searchword:     tag,
+				LastSearchedAt: time.Now(),
 			}
 
 			err = controller.ChannelInteractor.Create(c)
@@ -162,18 +164,19 @@ func (controller *ChannelController) Create(s *discordgo.Session, i *discordgo.I
 }
 
 func (controller *ChannelController) Update(s *discordgo.Session, c *discordgo.ChannelUpdate) {
-	// 変更されたチャンネルのIDを取得する
-	updatedChannelID := c.Channel.ID
-	channel, err := controller.ChannelInteractor.FetchOneById(updatedChannelID)
-	if err != nil && errors.Is(err, gorm.ErrRecordNotFound) {
-		return
-	}
 
 	// DBにあるサーバー情報を取得
 	guild, err := controller.GuildInteractor.FetchOneById(c.GuildID)
 
 	if err != nil {
 		s.ChannelMessageSend(guild.AdminChannelID, "予期せぬエラーが発生しました。:"+err.Error())
+		return
+	}
+	// 変更されたチャンネルのIDを取得する
+	updatedChannelID := c.Channel.ID
+	channel, err := controller.ChannelInteractor.FetchOneById(updatedChannelID)
+	if err != nil && errors.Is(err, gorm.ErrRecordNotFound) {
+		s.ChannelMessageSend(guild.AdminChannelID, "チャンネル情報変更のDBへの同期に失敗しました。:"+err.Error())
 		return
 	}
 

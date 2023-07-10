@@ -23,11 +23,9 @@ func Router(Init *gorm.DB) {
 	r.GET("/bot/:id", func(c *gin.Context) { BotApiController.FetchPublicOneById(c) })
 
 	// HTTPサーバーを非同期で起動
-	go func() {
-		if err := r.Run(":8080"); err != nil {
-			log.Fatal("Error starting HTTP server: ", err)
-		}
-	}()
+	if err := r.Run(":8080"); err != nil {
+		log.Fatal("Error starting HTTP server: ", err)
+	}
 	log.Printf("Start")
 
 }

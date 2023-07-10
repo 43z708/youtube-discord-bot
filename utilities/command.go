@@ -44,7 +44,7 @@ func RegisterCommand(s *discordgo.Session, event *discordgo.GuildCreate) {
 			Options: []*discordgo.ApplicationCommandOption{
 				{
 					Type:        discordgo.ApplicationCommandOptionString,
-					Name:        "channel-url",
+					Name:        "channel-id",
 					Description: "Please post the Youtube channel link you wish to add to the blacklist",
 					Required:    true,
 				},
@@ -56,7 +56,7 @@ func RegisterCommand(s *discordgo.Session, event *discordgo.GuildCreate) {
 			Options: []*discordgo.ApplicationCommandOption{
 				{
 					Type:        discordgo.ApplicationCommandOptionString,
-					Name:        "channel-url",
+					Name:        "channel-id",
 					Description: "Please post the Youtube channel link you wish to remove from the blacklist",
 					Required:    true,
 				},

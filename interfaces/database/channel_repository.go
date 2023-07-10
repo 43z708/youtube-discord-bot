@@ -15,14 +15,14 @@ type ChannelRepository struct {
 func (repo *ChannelRepository) FetchOneById(i string) (domain.Channel, error) {
 	var channel domain.Channel
 	id, _ := strconv.Atoi(i)
-	result := repo.SqlHandler.Where("deleted_at IS NULL").First(&channel, id)
+	result := repo.SqlHandler.First(&channel, id)
 
 	return channel, result.Error
 }
 
 func (repo *ChannelRepository) FetchAllByBotID(botID string) (domain.Channels, error) {
 	channels := make([]domain.Channel, 0)
-	result := repo.SqlHandler.Where("deleted_at IS NULL AND bot_id = ?", botID).Find(&channels)
+	result := repo.SqlHandler.Where("bot_id = ?", botID).Find(&channels)
 	if result.Error != nil {
 		return channels, result.Error
 	}
@@ -47,7 +47,7 @@ func (repo *ChannelRepository) FetchAllByBotID(botID string) (domain.Channels, e
 
 func (repo *ChannelRepository) FetchAllByGuildID(guildID string) (domain.Channels, error) {
 	channels := make([]domain.Channel, 0)
-	result := repo.SqlHandler.Where("deleted_at IS NULL AND guild_id = ?", guildID).Find(&channels)
+	result := repo.SqlHandler.Where("guild_id = ?", guildID).Find(&channels)
 	if result.Error != nil {
 		return channels, result.Error
 	}
@@ -72,7 +72,7 @@ func (repo *ChannelRepository) FetchAllByGuildID(guildID string) (domain.Channel
 
 func (repo *ChannelRepository) FetchAll() (domain.Channels, error) {
 	channels := make([]domain.Channel, 0)
-	result := repo.SqlHandler.Where("deleted_at IS NULL").Find(&channels)
+	result := repo.SqlHandler.Find(&channels)
 
 	return channels, result.Error
 }
@@ -99,8 +99,7 @@ func (repo *ChannelRepository) Delete(i string) error {
 	var channel domain.Channel
 	id, _ := strconv.Atoi(i)
 	result := repo.SqlHandler.First(&channel, id)
-	channel.DeletedAt = time.Now()
-	result = repo.SqlHandler.Save(&channel)
+	result = repo.SqlHandler.Delete(&channel)
 	if result.Error != nil {
 		return result.Error
 	}

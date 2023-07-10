@@ -9,9 +9,8 @@ import (
 	"fmt"
 	"log"
 	"os"
-	"os/signal"
 	"strconv"
-	"syscall"
+	"strings"
 	"time"
 
 	"github.com/bwmarrin/discordgo"
@@ -33,7 +32,7 @@ type BotCron struct {
 	Running bool
 }
 
-var botCrons map[string]*BotCron
+var botCrons map[string]*BotCron = make(map[string]*BotCron)
 
 func NewYoutubeController(sqlHandler *gorm.DB) *YoutubeController {
 	return &YoutubeController{
@@ -60,17 +59,6 @@ func NewYoutubeController(sqlHandler *gorm.DB) *YoutubeController {
 	}
 }
 
-func (controller *YoutubeController) SetCron() {
-	botCrons = make(map[string]*BotCron)
-
-	// Wait here until CTRL-C or other term signal is received.
-	log.Println("Bot is now running. Press CTRL-C to exit.")
-	sc := make(chan os.Signal, 1)
-	signal.Notify(sc, syscall.SIGINT, syscall.SIGTERM, os.Interrupt, os.Kill)
-	<-sc
-
-}
-
 func (controller *YoutubeController) StartNotification(s *discordgo.Session, i *discordgo.InteractionCreate, newTimeInterval int64) {
 
 	// DBにあるサーバー情報を取得
@@ -89,7 +77,7 @@ func (controller *YoutubeController) StartNotification(s *discordgo.Session, i *
 	bot, err := controller.BotInteractor.FetchOneById(s.State.User.ID)
 
 	// チャンネルの設定があるかどうかをチェック
-	_, err = controller.ChannelInteractor.FetchAllByGuildID(i.GuildID)
+	channels, err := controller.ChannelInteractor.FetchAllByGuildID(i.GuildID)
 	if err != nil && i != nil {
 		utilities.InteractionReply(s, i, "チャンネルを設定してからでないと通知はできません。")
 		return
@@ -135,7 +123,6 @@ func (controller *YoutubeController) StartNotification(s *discordgo.Session, i *
 	c := cron.New()
 	_, err = c.AddFunc("0 */"+strconv.FormatInt(bot.TimeInterval, 10)+" * * *", func() {
 		controller.PostLatestYoutubeVideo(ytSvc, s, guild)
-		s.ChannelMessageSend(guild.AdminChannelID, "Running job for bot")
 	})
 	if err != nil {
 		utilities.InteractionReply(s, i, "通知設定に失敗しました。:"+err.Error())
@@ -143,7 +130,14 @@ func (controller *YoutubeController) StartNotification(s *discordgo.Session, i *
 	}
 	c.Start()
 	botCrons[s.State.User.ID] = &BotCron{CronJob: c, Running: true}
-	utilities.InteractionNonEphemeralReply(s, i, "youtube動画の通知設定を"+strconv.FormatInt(bot.TimeInterval, 10)+"時間おきにして稼働開始しました。")
+
+	// 通知開始
+	var channelIds []string
+	for _, channel := range channels {
+		channelIds = append(channelIds, "キーワード : "+channel.Searchword+" => <#"+channel.ID+">")
+	}
+	channelIdLinks := strings.Join(channelIds, "\n")
+	utilities.InteractionNonEphemeralReply(s, i, "youtube動画の通知設定を"+strconv.FormatInt(bot.TimeInterval, 10)+"時間おきにして稼働開始しました。\n配信対象チャンネルは以下です。\n"+channelIdLinks)
 }
 
 func (controller *YoutubeController) PostLatestYoutubeVideo(ytSvc *youtube.Service, s *discordgo.Session, guild domain.Guild) {
@@ -173,12 +167,8 @@ func (controller *YoutubeController) PostLatestYoutubeVideo(ytSvc *youtube.Servi
 
 		// youtubeのAPIは一度につき50件までなのでpagenationで対応
 		for {
-			call := ytSvc.Search.List([]string{"id"})
-			if channel.LastSearchedAt.IsZero() {
-				call.Q(channel.Searchword).MaxResults(1).Type("video")
-			} else {
-				call.Q(channel.Searchword).MaxResults(50).Type("video").PublishedAfter(channel.LastSearchedAt.Format(time.RFC3339))
-			}
+			call := ytSvc.Search.List([]string{"id", "Snippet"})
+			call.Q(channel.Searchword).MaxResults(50).Type("video").PublishedAfter(channel.LastSearchedAt.Format(time.RFC3339))
 			if nextPageToken != "" {
 				call.PageToken(nextPageToken)
 			}
@@ -187,18 +177,19 @@ func (controller *YoutubeController) PostLatestYoutubeVideo(ytSvc *youtube.Servi
 				s.ChannelMessageSend(guild.AdminChannelID, "Youtube APIでのデータ取得に失敗しました。:"+err.Error())
 				return
 			}
-
+			log.Println(&response.Items)
 			for _, video := range response.Items {
-				channelId := video.Id.ChannelId
+				channelId := video.Snippet.ChannelId
 				log.Println(channelId)
 				var shouldBreak = false
 				for _, blacklist := range blacklists {
 					if channelId == blacklist.Distributor {
 						shouldBreak = true
-						return
+						break
 					}
 				}
 				if shouldBreak {
+					// ブラックリストに含まれたチャンネルの動画の場合は投稿しない
 					break
 				}
 				videoURL := fmt.Sprintf("https://www.youtube.com/watch?v=%s", video.Id.VideoId)
@@ -222,7 +213,13 @@ func (controller *YoutubeController) PostLatestYoutubeVideo(ytSvc *youtube.Servi
 
 	}
 
-	s.ChannelMessageSend(guild.AdminChannelID, "動画URLの通知投稿が完了しました。")
+	var channelIds []string
+	for _, channel := range channels {
+		channelIds = append(channelIds, "キーワード : "+channel.Searchword+" => <#"+channel.ID+">")
+	}
+	channelIdLinks := strings.Join(channelIds, "\n")
+
+	s.ChannelMessageSend(guild.AdminChannelID, "以下のチャンネルの動画投稿通知が完了しました。\n"+channelIdLinks)
 }
 
 func (controller *YoutubeController) StopNotification(s *discordgo.Session, i *discordgo.InteractionCreate) {

@@ -143,7 +143,7 @@ func (controller *BlacklistController) Create(s *discordgo.Session, i *discordgo
 				return
 			}
 			// 追加完了通知
-			utilities.InteractionReply(s, i, fmt.Sprintf("ブラックリストに https://www.youtube.com/channel/`%s` を追加しました。", Distributor))
+			utilities.InteractionReply(s, i, "ブラックリストに https://www.youtube.com/channel/"+Distributor+" を追加しました。")
 		}
 	}
 }

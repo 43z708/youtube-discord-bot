@@ -7,7 +7,7 @@ import (
 func main() {
 
 	Init := infrastructure.Init()
-	infrastructure.Router(Init)
 	infrastructure.Discord(Init)
+	// infrastructure.Router(Init)
 
 }
