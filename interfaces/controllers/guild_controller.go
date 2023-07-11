@@ -79,7 +79,8 @@ func (controller *GuildController) Create(s *discordgo.Session, e *discordgo.Gui
 
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
-			// DBにサーバー情報がない場合、チャンネル等作成して保存
+			// いったんerrをnilにして、DBにサーバー情報がない場合、チャンネル等作成して保存
+			err = nil;
 
 			category, err := s.GuildChannelCreateComplex(e.Guild.ID, discordgo.GuildChannelCreateData{
 				Name: os.Getenv("CATEGORY_NAME"),
