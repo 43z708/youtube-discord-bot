@@ -25,6 +25,8 @@ services:
     depends_on:
       - mariadb
     command: sh -c 'if [ "$APP_ENV" != "local" ]; then go run main.go; else sleep infinity; fi'
+    environment:
+      - APP_ENV=${APP_ENV}
 
   phpmyadmin:
     build: ./docker/phpmyadmin/
