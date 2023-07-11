@@ -27,17 +27,17 @@ func BotSeeds(db *gorm.DB) error {
 	}
 	err = db.Create(&bot01).Error
 
-	botId02 := os.Getenv("BOT_ID02")
-	botToken02 := os.Getenv("BOT_TOKEN02")
+	// botId02 := os.Getenv("BOT_ID02")
+	// botToken02 := os.Getenv("BOT_TOKEN02")
 
-	bot02 := domain.Bot{
-		ID:           botId02,
-		Name:         "test-bot02",
-		TimeInterval: 3,
-		Token:        botToken02,
-		IsAvailable:  true,
-	}
-	err = db.Create(&bot02).Error
+	// bot02 := domain.Bot{
+	// 	ID:           botId02,
+	// 	Name:         "test-bot02",
+	// 	TimeInterval: 3,
+	// 	Token:        botToken02,
+	// 	IsAvailable:  true,
+	// }
+	// err = db.Create(&bot02).Error
 	if err != nil {
 		log.Fatalf("Error seeding bot data: %s", err.Error())
 	}
