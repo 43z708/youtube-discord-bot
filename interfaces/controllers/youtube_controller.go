@@ -185,6 +185,12 @@ func (controller *YoutubeController) PostLatestYoutubeVideo(ytSvc *youtube.Servi
 				for _, blacklist := range blacklists {
 					if channelId == blacklist.Distributor {
 						shouldBreak = true
+						videoURL := fmt.Sprintf("https://www.youtube.com/watch?v=%s", video.Id.VideoId)
+						message := fmt.Sprintf("この動画はブラックリストに含まれているチャンネルのため通知を拒否しました: %s", videoURL)
+						_, err := s.ChannelMessageSend(guild.AdminChannelID, message)
+						if err != nil {
+							s.ChannelMessageSend(guild.AdminChannelID, "動画URLの送信に失敗しました。:"+err.Error())
+						}
 						break
 					}
 				}
