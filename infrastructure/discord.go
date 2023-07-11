@@ -38,8 +38,6 @@ func CreateSession(bots domain.Bots, Init *gorm.DB) {
 		log.Fatalf("Error loading dotenv: %s", err.Error())
 	}
 
-	appEnv := os.Getenv("APP_ENV")
-
 	ChannelController := controllers.NewChannelController(Init)
 	GuildController := controllers.NewGuildController(Init)
 	BlacklistController := controllers.NewBlacklistController(Init)
@@ -99,15 +97,6 @@ func CreateSession(bots domain.Bots, Init *gorm.DB) {
 				}
 
 			})
-
-			if appEnv != "local" {
-				guilds := GuildController.FetchPublicAllByBotID(dg.State.User.ID)
-				for _, guild := range guilds {
-					if guild.AdminChannelID != "" {
-						dg.ChannelMessageSend(guild.AdminChannelID, "botが稼働しました。現在通知が止まっています。再稼働させるには`/start-notification`コマンドを入力してください。")
-					}
-				}
-			}
 
 			wg.Done() // 処理が終了したらWaitGroupのカウンタを減らす
 		}(bot)
