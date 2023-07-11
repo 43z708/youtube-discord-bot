@@ -119,7 +119,7 @@ func (controller *GuildController) Create(s *discordgo.Session, e *discordgo.Gui
 				},
 			})
 			if err != nil {
-				s.ChannelMessageSend(channel.ID, "チャンネルの作成に失敗しました。:"+err.Error())
+				log.Println("Error creating admin channel:" ,err)
 				return
 			}
 			guild := domain.Guild{
