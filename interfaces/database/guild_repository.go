@@ -16,9 +16,11 @@ func (repo *GuildRepository) FetchPublicOneById(i string) (domain.PublicGuild, e
 	id, _ := strconv.Atoi(i)
 	result := repo.SqlHandler.First(&guild, id)
 	publicGuild := domain.PublicGuild{
-		ID:    guild.ID,
-		Name:  guild.Name,
-		BotID: guild.BotID,
+		ID:             guild.ID,
+		Name:           guild.Name,
+		BotID:          guild.BotID,
+		CategoryID:     guild.CategoryID,
+		AdminChannelID: guild.AdminChannelID,
 	}
 
 	return publicGuild, result.Error
@@ -34,9 +36,11 @@ func (repo *GuildRepository) FetchPublicAllByBotID(botID string) (domain.PublicG
 	var publicGuilds domain.PublicGuilds
 	for _, guild := range guilds {
 		publicGuild := domain.PublicGuild{
-			ID:    guild.ID,
-			Name:  guild.Name,
-			BotID: guild.BotID,
+			ID:             guild.ID,
+			Name:           guild.Name,
+			BotID:          guild.BotID,
+			CategoryID:     guild.CategoryID,
+			AdminChannelID: guild.AdminChannelID,
 		}
 		publicGuilds = append(publicGuilds, publicGuild)
 	}

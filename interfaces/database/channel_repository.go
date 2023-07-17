@@ -2,8 +2,8 @@ package database
 
 import (
 	"app/domain"
+	"log"
 	"strconv"
-	"time"
 
 	"gorm.io/gorm"
 )
@@ -87,7 +87,8 @@ func (repo *ChannelRepository) Create(g domain.Channel) error {
 }
 
 func (repo *ChannelRepository) Update(channel *domain.Channel) error {
-	channel.UpdatedAt = time.Now()
+	log.Println("channel2", channel)
+	log.Println("&channel2", &channel)
 	result := repo.SqlHandler.Save(&channel)
 	if result.Error != nil {
 		return result.Error

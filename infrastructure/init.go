@@ -24,7 +24,7 @@ func Init() *gorm.DB {
 	DB_PASSWORD := os.Getenv("DB_PASSWORD")
 	DB_USER := os.Getenv("DB_USER")
 
-	DsName := DB_USER + ":" + DB_PASSWORD + "@tcp(mariadb:3306)/" + DB_HOST + "?charset=utf8mb4&parseTime=True&loc=Local"
+	DsName := DB_USER + ":" + DB_PASSWORD + "@tcp(mariadb:3306)/" + DB_HOST + "?charset=utf8mb4&parseTime=True&loc=UTC"
 
 	db, err := gorm.Open(mysql.Open(DsName), &gorm.Config{})
 	if err != nil && err.Error() != "" {

@@ -108,6 +108,15 @@ func CreateSession(bots domain.Bots, Init *gorm.DB) {
 		defer dg.Close()
 
 		log.Println("Discord bot is running!")
+		guilds := GuildController.FetchPublicAllByBotID(bot.ID)
+		log.Println(guilds)
+		if guilds != nil {
+			for _, guild := range guilds {
+
+				log.Println(guild.AdminChannelID)
+				dg.ChannelMessageSend(guild.AdminChannelID, "@everyone Botが再起動されました。youtube通知の設定が切れている状態なので、`/start-notification`コマンドで通知を再設定してください。")
+			}
+		}
 	}
 
 	// Wait here until CTRL-C or other term signal is received.

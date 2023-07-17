@@ -124,6 +124,10 @@ func (controller *YoutubeController) StartNotification(s *discordgo.Session, i *
 	_, err = c.AddFunc("0 */"+strconv.FormatInt(bot.TimeInterval, 10)+" * * *", func() {
 		controller.PostLatestYoutubeVideo(ytSvc, s, guild)
 	})
+	// cronのテスト用
+	// _, err = c.AddFunc("* * * * *", func() {
+	// 	controller.PostLatestYoutubeVideo(ytSvc, s, guild)
+	// })
 	if err != nil {
 		utilities.InteractionReply(s, i, "通知設定に失敗しました。:"+err.Error())
 		return
@@ -168,7 +172,7 @@ func (controller *YoutubeController) PostLatestYoutubeVideo(ytSvc *youtube.Servi
 		// youtubeのAPIは一度につき50件までなのでpagenationで対応
 		for {
 			call := ytSvc.Search.List([]string{"id", "Snippet"})
-			call.Q(channel.Searchword).MaxResults(50).Type("video").PublishedAfter(channel.LastSearchedAt.Format(time.RFC3339))
+			call.Q(channel.Searchword).MaxResults(50).Type("video").PublishedAfter(channel.LastSearchedAt.UTC().Format(time.RFC3339))
 			if nextPageToken != "" {
 				call.PageToken(nextPageToken)
 			}
@@ -196,7 +200,7 @@ func (controller *YoutubeController) PostLatestYoutubeVideo(ytSvc *youtube.Servi
 				}
 				if shouldBreak {
 					// ブラックリストに含まれたチャンネルの動画の場合は投稿しない
-					break
+					continue
 				}
 				videoURL := fmt.Sprintf("https://www.youtube.com/watch?v=%s", video.Id.VideoId)
 				message := fmt.Sprintf("New video: %s", videoURL)
@@ -210,11 +214,13 @@ func (controller *YoutubeController) PostLatestYoutubeVideo(ytSvc *youtube.Servi
 			if nextPageToken == "" {
 				break
 			}
-			channel.LastSearchedAt = time.Now()
-			err = controller.ChannelInteractor.Update(&channel)
-			if err != nil {
-				s.ChannelMessageSend(guild.AdminChannelID, "DBの更新に失敗しました。:"+err.Error())
-			}
+		}
+		channel.LastSearchedAt = time.Now()
+		log.Println("channel1", channel)
+		log.Println("&channel1", &channel)
+		err = controller.ChannelInteractor.Update(&channel)
+		if err != nil {
+			s.ChannelMessageSend(guild.AdminChannelID, "DBの更新に失敗しました。:"+err.Error())
 		}
 
 	}

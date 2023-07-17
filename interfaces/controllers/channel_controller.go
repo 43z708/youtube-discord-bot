@@ -176,7 +176,6 @@ func (controller *ChannelController) Update(s *discordgo.Session, c *discordgo.C
 	updatedChannelID := c.Channel.ID
 	channel, err := controller.ChannelInteractor.FetchOneById(updatedChannelID)
 	if err != nil && errors.Is(err, gorm.ErrRecordNotFound) {
-		s.ChannelMessageSend(guild.AdminChannelID, "チャンネル情報変更のDBへの同期に失敗しました。:"+err.Error())
 		return
 	}
 
